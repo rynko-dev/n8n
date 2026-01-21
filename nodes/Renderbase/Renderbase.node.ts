@@ -1,0 +1,721 @@
+import type {
+  IExecuteFunctions,
+  IDataObject,
+  INodeExecutionData,
+  INodeType,
+  INodeTypeDescription,
+  ILoadOptionsFunctions,
+  INodePropertyOptions,
+  IHttpRequestMethods,
+} from 'n8n-workflow';
+
+export class Renderbase implements INodeType {
+  description: INodeTypeDescription = {
+    displayName: 'Renderbase',
+    name: 'renderbase',
+    icon: 'file:renderbase.svg',
+    group: ['transform'],
+    version: 1,
+    subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
+    description: 'Generate PDF and Excel documents from templates',
+    defaults: {
+      name: 'Renderbase',
+    },
+    inputs: ['main'],
+    outputs: ['main'],
+    credentials: [
+      {
+        name: 'renderbaseApi',
+        required: true,
+      },
+    ],
+    properties: [
+      // Resource
+      {
+        displayName: 'Resource',
+        name: 'resource',
+        type: 'options',
+        noDataExpression: true,
+        options: [
+          {
+            name: 'Document',
+            value: 'document',
+          },
+          {
+            name: 'Batch',
+            value: 'batch',
+          },
+        ],
+        default: 'document',
+      },
+
+      // Document Operations
+      {
+        displayName: 'Operation',
+        name: 'operation',
+        type: 'options',
+        noDataExpression: true,
+        displayOptions: {
+          show: {
+            resource: ['document'],
+          },
+        },
+        options: [
+          {
+            name: 'Generate',
+            value: 'generate',
+            description: 'Generate a document from a template',
+            action: 'Generate a document',
+          },
+          {
+            name: 'Generate PDF',
+            value: 'generatePdf',
+            description: 'Generate a PDF document from a template',
+            action: 'Generate a PDF',
+          },
+          {
+            name: 'Generate Excel',
+            value: 'generateExcel',
+            description: 'Generate an Excel document from a template',
+            action: 'Generate an Excel file',
+          },
+          {
+            name: 'Get',
+            value: 'get',
+            description: 'Get a document job by ID',
+            action: 'Get a document job',
+          },
+          {
+            name: 'Search',
+            value: 'search',
+            description: 'Search for document jobs',
+            action: 'Search document jobs',
+          },
+        ],
+        default: 'generate',
+      },
+
+      // Batch Operations
+      {
+        displayName: 'Operation',
+        name: 'operation',
+        type: 'options',
+        noDataExpression: true,
+        displayOptions: {
+          show: {
+            resource: ['batch'],
+          },
+        },
+        options: [
+          {
+            name: 'Generate',
+            value: 'generate',
+            description: 'Generate multiple documents from a template',
+            action: 'Generate batch documents',
+          },
+          {
+            name: 'Get',
+            value: 'get',
+            description: 'Get a batch job by ID',
+            action: 'Get a batch job',
+          },
+        ],
+        default: 'generate',
+      },
+
+      // ===================
+      // Template Field (for document generate)
+      // ===================
+      {
+        displayName: 'Template',
+        name: 'templateId',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getTemplates',
+        },
+        required: true,
+        displayOptions: {
+          show: {
+            resource: ['document'],
+            operation: ['generate'],
+          },
+        },
+        default: '',
+        description: 'The template to use for document generation',
+      },
+      {
+        displayName: 'PDF Template',
+        name: 'templateId',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getPdfTemplates',
+        },
+        required: true,
+        displayOptions: {
+          show: {
+            resource: ['document'],
+            operation: ['generatePdf'],
+          },
+        },
+        default: '',
+        description: 'The PDF template to use',
+      },
+      {
+        displayName: 'Excel Template',
+        name: 'templateId',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getExcelTemplates',
+        },
+        required: true,
+        displayOptions: {
+          show: {
+            resource: ['document'],
+            operation: ['generateExcel'],
+          },
+        },
+        default: '',
+        description: 'The Excel template to use',
+      },
+
+      // Output Format (for generic generate)
+      {
+        displayName: 'Output Format',
+        name: 'format',
+        type: 'options',
+        displayOptions: {
+          show: {
+            resource: ['document'],
+            operation: ['generate'],
+          },
+        },
+        options: [
+          { name: 'PDF', value: 'pdf' },
+          { name: 'Excel', value: 'excel' },
+        ],
+        default: 'pdf',
+        description: 'The output format for the generated document',
+      },
+
+      // ===================
+      // Get Document by ID
+      // ===================
+      {
+        displayName: 'Job ID',
+        name: 'jobId',
+        type: 'string',
+        required: true,
+        displayOptions: {
+          show: {
+            resource: ['document'],
+            operation: ['get'],
+          },
+        },
+        default: '',
+        description: 'The ID of the document job to retrieve',
+      },
+
+      // ===================
+      // Get Batch by ID
+      // ===================
+      {
+        displayName: 'Batch ID',
+        name: 'batchId',
+        type: 'string',
+        required: true,
+        displayOptions: {
+          show: {
+            resource: ['batch'],
+            operation: ['get'],
+          },
+        },
+        default: '',
+        description: 'The ID of the batch job to retrieve',
+      },
+
+      // ===================
+      // Search Filters
+      // ===================
+      {
+        displayName: 'Search By',
+        name: 'searchBy',
+        type: 'options',
+        displayOptions: {
+          show: {
+            resource: ['document'],
+            operation: ['search'],
+          },
+        },
+        options: [
+          { name: 'Status', value: 'status' },
+          { name: 'Template', value: 'templateId' },
+          { name: 'Format', value: 'format' },
+        ],
+        default: 'status',
+      },
+      {
+        displayName: 'Status',
+        name: 'searchStatus',
+        type: 'options',
+        displayOptions: {
+          show: {
+            resource: ['document'],
+            operation: ['search'],
+            searchBy: ['status'],
+          },
+        },
+        options: [
+          { name: 'Pending', value: 'pending' },
+          { name: 'Processing', value: 'processing' },
+          { name: 'Completed', value: 'completed' },
+          { name: 'Failed', value: 'failed' },
+        ],
+        default: 'completed',
+      },
+      {
+        displayName: 'Template',
+        name: 'searchTemplateId',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getTemplates',
+        },
+        displayOptions: {
+          show: {
+            resource: ['document'],
+            operation: ['search'],
+            searchBy: ['templateId'],
+          },
+        },
+        default: '',
+      },
+      {
+        displayName: 'Format',
+        name: 'searchFormat',
+        type: 'options',
+        displayOptions: {
+          show: {
+            resource: ['document'],
+            operation: ['search'],
+            searchBy: ['format'],
+          },
+        },
+        options: [
+          { name: 'PDF', value: 'pdf' },
+          { name: 'Excel', value: 'excel' },
+        ],
+        default: 'pdf',
+      },
+
+      // ===================
+      // Batch Template
+      // ===================
+      {
+        displayName: 'Template',
+        name: 'templateId',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getTemplates',
+        },
+        required: true,
+        displayOptions: {
+          show: {
+            resource: ['batch'],
+            operation: ['generate'],
+          },
+        },
+        default: '',
+        description: 'The template to use for batch generation',
+      },
+      {
+        displayName: 'Output Format',
+        name: 'format',
+        type: 'options',
+        displayOptions: {
+          show: {
+            resource: ['batch'],
+            operation: ['generate'],
+          },
+        },
+        options: [
+          { name: 'PDF', value: 'pdf' },
+          { name: 'Excel', value: 'excel' },
+        ],
+        default: 'pdf',
+        required: true,
+      },
+      {
+        displayName: 'Documents',
+        name: 'documents',
+        type: 'fixedCollection',
+        typeOptions: {
+          multipleValues: true,
+        },
+        displayOptions: {
+          show: {
+            resource: ['batch'],
+            operation: ['generate'],
+          },
+        },
+        default: {},
+        placeholder: 'Add Document',
+        options: [
+          {
+            name: 'documentValues',
+            displayName: 'Document',
+            values: [
+              {
+                displayName: 'Variables (JSON)',
+                name: 'variables',
+                type: 'string',
+                default: '',
+                description: 'JSON object with template variables',
+              },
+              {
+                displayName: 'File Name',
+                name: 'fileName',
+                type: 'string',
+                default: '',
+                description: 'Custom file name (without extension)',
+              },
+            ],
+          },
+        ],
+      },
+
+      // ===================
+      // Additional Options
+      // ===================
+      {
+        displayName: 'Options',
+        name: 'options',
+        type: 'collection',
+        placeholder: 'Add Option',
+        default: {},
+        displayOptions: {
+          show: {
+            resource: ['document'],
+            operation: ['generate', 'generatePdf', 'generateExcel'],
+          },
+        },
+        options: [
+          {
+            displayName: 'File Name',
+            name: 'fileName',
+            type: 'string',
+            default: '',
+            description: 'Custom file name (without extension)',
+          },
+          {
+            displayName: 'Wait for Completion',
+            name: 'waitForCompletion',
+            type: 'boolean',
+            default: true,
+            description: 'Whether to wait for the document to be generated before continuing',
+          },
+        ],
+      },
+
+      // ===================
+      // Template Variables
+      // ===================
+      {
+        displayName: 'Template Variables',
+        name: 'variables',
+        type: 'fixedCollection',
+        typeOptions: {
+          multipleValues: true,
+        },
+        displayOptions: {
+          show: {
+            resource: ['document'],
+            operation: ['generate', 'generatePdf', 'generateExcel'],
+          },
+        },
+        default: {},
+        placeholder: 'Add Variable',
+        options: [
+          {
+            name: 'variableValues',
+            displayName: 'Variable',
+            values: [
+              {
+                displayName: 'Name',
+                name: 'name',
+                type: 'string',
+                default: '',
+              },
+              {
+                displayName: 'Value',
+                name: 'value',
+                type: 'string',
+                default: '',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  methods = {
+    loadOptions: {
+      async getTemplates(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+        const returnData: INodePropertyOptions[] = [];
+        const credentials = await this.getCredentials('renderbaseApi');
+        const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+
+        try {
+          const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+            method: 'GET' as IHttpRequestMethods,
+            url: `${baseUrl}/api/v1/templates`,
+            qs: { limit: 100 },
+            json: true,
+          });
+
+          const templates = response.data || [];
+          for (const template of templates) {
+            returnData.push({
+              name: `${template.name} (${template.format})`,
+              value: template.id,
+              description: template.description || '',
+            });
+          }
+        } catch (error) {
+          // Return empty if failed
+        }
+
+        return returnData;
+      },
+
+      async getPdfTemplates(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+        const returnData: INodePropertyOptions[] = [];
+        const credentials = await this.getCredentials('renderbaseApi');
+        const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+
+        try {
+          const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+            method: 'GET' as IHttpRequestMethods,
+            url: `${baseUrl}/api/v1/templates`,
+            qs: { format: 'pdf', limit: 100 },
+            json: true,
+          });
+
+          const templates = response.data || [];
+          for (const template of templates) {
+            returnData.push({
+              name: template.name,
+              value: template.id,
+              description: template.description || '',
+            });
+          }
+        } catch (error) {
+          // Return empty if failed
+        }
+
+        return returnData;
+      },
+
+      async getExcelTemplates(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+        const returnData: INodePropertyOptions[] = [];
+        const credentials = await this.getCredentials('renderbaseApi');
+        const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+
+        try {
+          const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+            method: 'GET' as IHttpRequestMethods,
+            url: `${baseUrl}/api/v1/templates`,
+            qs: { format: 'excel', limit: 100 },
+            json: true,
+          });
+
+          const templates = response.data || [];
+          for (const template of templates) {
+            returnData.push({
+              name: template.name,
+              value: template.id,
+              description: template.description || '',
+            });
+          }
+        } catch (error) {
+          // Return empty if failed
+        }
+
+        return returnData;
+      },
+    },
+  };
+
+  async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+    const items = this.getInputData();
+    const returnData: INodeExecutionData[] = [];
+    const resource = this.getNodeParameter('resource', 0) as string;
+    const operation = this.getNodeParameter('operation', 0) as string;
+    const credentials = await this.getCredentials('renderbaseApi');
+    const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+
+    for (let i = 0; i < items.length; i++) {
+      try {
+        let responseData: IDataObject;
+
+        if (resource === 'document') {
+          if (operation === 'generate') {
+            responseData = await this.generateDocument(i, baseUrl);
+          } else if (operation === 'generatePdf') {
+            responseData = await this.generateDocument(i, baseUrl, 'pdf');
+          } else if (operation === 'generateExcel') {
+            responseData = await this.generateDocument(i, baseUrl, 'excel');
+          } else if (operation === 'get') {
+            responseData = await this.getDocument(i, baseUrl);
+          } else if (operation === 'search') {
+            responseData = await this.searchDocuments(i, baseUrl);
+          } else {
+            throw new Error(`Unknown operation: ${operation}`);
+          }
+        } else if (resource === 'batch') {
+          if (operation === 'generate') {
+            responseData = await this.generateBatch(i, baseUrl);
+          } else if (operation === 'get') {
+            responseData = await this.getBatch(i, baseUrl);
+          } else {
+            throw new Error(`Unknown operation: ${operation}`);
+          }
+        } else {
+          throw new Error(`Unknown resource: ${resource}`);
+        }
+
+        returnData.push({ json: responseData });
+      } catch (error) {
+        if (this.continueOnFail()) {
+          returnData.push({ json: { error: (error as Error).message } });
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    return [returnData];
+  }
+
+  private async generateDocument(this: IExecuteFunctions, itemIndex: number, baseUrl: string, format?: string): Promise<IDataObject> {
+    const templateId = this.getNodeParameter('templateId', itemIndex) as string;
+    const options = this.getNodeParameter('options', itemIndex, {}) as IDataObject;
+    const variablesCollection = this.getNodeParameter('variables', itemIndex, {}) as IDataObject;
+
+    const body: IDataObject = {
+      templateId,
+    };
+
+    // Set format
+    if (format) {
+      body.format = format;
+    } else {
+      body.format = this.getNodeParameter('format', itemIndex) as string;
+    }
+
+    // Optional fields
+    if (options.fileName) body.fileName = options.fileName;
+    if (options.waitForCompletion !== undefined) body.waitForCompletion = options.waitForCompletion;
+
+    // Process variables
+    const variableValues = (variablesCollection as IDataObject).variableValues as IDataObject[] || [];
+    if (variableValues.length > 0) {
+      const variables: IDataObject = {};
+      for (const v of variableValues) {
+        variables[v.name as string] = v.value;
+      }
+      body.variables = variables;
+    }
+
+    const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+      method: 'POST' as IHttpRequestMethods,
+      url: `${baseUrl}/api/v1/documents/generate`,
+      body,
+      json: true,
+    });
+
+    return response.data || response;
+  }
+
+  private async getDocument(this: IExecuteFunctions, itemIndex: number, baseUrl: string): Promise<IDataObject> {
+    const jobId = this.getNodeParameter('jobId', itemIndex) as string;
+
+    const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+      method: 'GET' as IHttpRequestMethods,
+      url: `${baseUrl}/api/v1/documents/${jobId}`,
+      json: true,
+    });
+
+    return response.data || response;
+  }
+
+  private async searchDocuments(this: IExecuteFunctions, itemIndex: number, baseUrl: string): Promise<IDataObject> {
+    const searchBy = this.getNodeParameter('searchBy', itemIndex) as string;
+    const qs: IDataObject = { limit: 10 };
+
+    if (searchBy === 'status') {
+      qs.status = this.getNodeParameter('searchStatus', itemIndex) as string;
+    } else if (searchBy === 'templateId') {
+      qs.templateId = this.getNodeParameter('searchTemplateId', itemIndex) as string;
+    } else if (searchBy === 'format') {
+      qs.format = this.getNodeParameter('searchFormat', itemIndex) as string;
+    }
+
+    const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+      method: 'GET' as IHttpRequestMethods,
+      url: `${baseUrl}/api/v1/documents`,
+      qs,
+      json: true,
+    });
+
+    return response;
+  }
+
+  private async generateBatch(this: IExecuteFunctions, itemIndex: number, baseUrl: string): Promise<IDataObject> {
+    const templateId = this.getNodeParameter('templateId', itemIndex) as string;
+    const format = this.getNodeParameter('format', itemIndex) as string;
+    const documentsCollection = this.getNodeParameter('documents', itemIndex, {}) as IDataObject;
+
+    const documentValues = (documentsCollection as IDataObject).documentValues as IDataObject[] || [];
+    const documents = documentValues.map((d) => {
+      const doc: IDataObject = {};
+      if (d.variables) {
+        try {
+          doc.variables = JSON.parse(d.variables as string);
+        } catch {
+          // Ignore invalid JSON
+        }
+      }
+      if (d.fileName) {
+        doc.fileName = d.fileName;
+      }
+      return doc;
+    });
+
+    const body: IDataObject = {
+      templateId,
+      format,
+      documents,
+    };
+
+    const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+      method: 'POST' as IHttpRequestMethods,
+      url: `${baseUrl}/api/v1/batches/generate`,
+      body,
+      json: true,
+    });
+
+    return response.data || response;
+  }
+
+  private async getBatch(this: IExecuteFunctions, itemIndex: number, baseUrl: string): Promise<IDataObject> {
+    const batchId = this.getNodeParameter('batchId', itemIndex) as string;
+
+    const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+      method: 'GET' as IHttpRequestMethods,
+      url: `${baseUrl}/api/v1/batches/${batchId}`,
+      json: true,
+    });
+
+    return response.data || response;
+  }
+}
