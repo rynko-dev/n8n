@@ -1,6 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
-  <rect width="48" height="48" rx="8" fill="#6366F1"/>
-  <path d="M14 12h14l6 6v18a2 2 0 01-2 2H14a2 2 0 01-2-2V14a2 2 0 012-2z" stroke="white" stroke-width="2" fill="none"/>
-  <path d="M28 12v6h6" stroke="white" stroke-width="2" fill="none"/>
-  <path d="M16 24h12M16 28h8M16 32h10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="n8nGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="48" height="48" rx="10" fill="url(#n8nGradient)"/>
+
+  <!-- Back document -->
+  <rect x="14" y="4" width="26" height="34" rx="2" fill="white" fill-opacity="0.35"/>
+
+  <!-- Front document -->
+  <rect x="8" y="10" width="26" height="34" rx="2" fill="white"/>
+
+  <!-- Lines -->
+  <rect x="14" y="19" width="14" height="2.5" rx="1.25" fill="#8B5CF6" fill-opacity="0.5"/>
+  <rect x="14" y="26" width="10" height="2.5" rx="1.25" fill="#8B5CF6" fill-opacity="0.5"/>
+  <rect x="14" y="33" width="12" height="2.5" rx="1.25" fill="#8B5CF6" fill-opacity="0.5"/>
 </svg>
