@@ -28,8 +28,67 @@ This guide covers deploying the Renderbase n8n community node package.
 
 The Renderbase backend must have:
 - API Key authentication enabled
+- **Integration API module deployed** (`/api/v1/integration-api/*` endpoints) - Required for team/workspace/template cascading selection
 - Webhook subscriptions module deployed
 - SSL certificate (HTTPS required)
+
+---
+
+## Cascading Team/Workspace/Template Selection
+
+The Renderbase n8n node implements cascading dropdown selection for Team → Workspace → Template. This ensures users can only select templates from workspaces they have access to.
+
+### How It Works
+
+1. **Team Dropdown**: Lists all teams the user has access to via the Integration API
+2. **Workspace Dropdown**: Filters workspaces based on the selected team
+3. **Template Dropdown**: Filters templates based on the selected workspace and document type
+
+### Implementation Details
+
+The node uses n8n's `loadOptions` methods with `loadOptionsDependsOn` to create the cascading behavior:
+
+```typescript
+// Team dropdown - no dependencies
+{
+  displayName: 'Team',
+  name: 'teamId',
+  type: 'options',
+  typeOptions: {
+    loadOptionsMethod: 'getTeams',
+  },
+}
+
+// Workspace dropdown - depends on teamId
+{
+  displayName: 'Workspace',
+  name: 'workspaceId',
+  type: 'options',
+  typeOptions: {
+    loadOptionsMethod: 'getWorkspaces',
+    loadOptionsDependsOn: ['teamId'],
+  },
+}
+
+// Template dropdown - depends on workspaceId
+{
+  displayName: 'Template',
+  name: 'templateId',
+  type: 'options',
+  typeOptions: {
+    loadOptionsMethod: 'getTemplates',  // or getPdfTemplates, getExcelTemplates
+    loadOptionsDependsOn: ['workspaceId'],
+  },
+}
+```
+
+### API Endpoints Used
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /api/v1/integration-api/teams` | List teams for dropdown |
+| `GET /api/v1/integration-api/workspaces?teamId={id}` | List workspaces filtered by team |
+| `GET /api/v1/integration-api/templates?workspaceId={id}&type={pdf\|excel}` | List templates filtered by workspace and type |
 
 ---
 
@@ -266,6 +325,22 @@ npm view n8n-nodes-renderbase
 - Check TypeScript version compatibility
 - Verify n8n-workflow peer dependency
 
+**Cascading Dropdowns Not Loading**
+- Verify Integration API module is deployed on backend
+- Check `/api/v1/integration-api/teams` returns data with API key auth
+- Ensure API key has correct permissions
+- Check n8n logs for API errors during dropdown load
+
+**Workspace Dropdown Empty After Team Selection**
+- Verify the `loadOptionsDependsOn: ['teamId']` is configured
+- Check that the team has workspaces created
+- Verify API key has access to the selected team's workspaces
+
+**Template Dropdown Shows Wrong Templates**
+- Verify workspace filtering is working correctly
+- Check that templates exist in the selected workspace
+- For PDF/Excel specific dropdowns, verify the type filter is applied
+
 ### Debug Mode
 
 Enable debug logging:
@@ -299,10 +374,22 @@ n8n-renderbase/
 │   └── RenderbaseApi.credentials.ts
 └── nodes/
     └── Renderbase/
-        ├── Renderbase.node.ts        # Action node
+        ├── Renderbase.node.ts        # Action node (with cascading loadOptions)
         ├── RenderbaseTrigger.node.ts # Trigger node
         └── renderbase.svg            # Icon
 ```
+
+### Key Node Methods
+
+The `Renderbase.node.ts` implements these loadOptions methods for cascading selection:
+
+| Method | Purpose | Dependencies |
+|--------|---------|--------------|
+| `getTeams` | List teams for dropdown | None |
+| `getWorkspaces` | List workspaces filtered by team | `teamId` |
+| `getTemplates` | List all templates in workspace | `workspaceId` |
+| `getPdfTemplates` | List PDF templates in workspace | `workspaceId` |
+| `getExcelTemplates` | List Excel templates in workspace | `workspaceId` |
 
 ### npm Commands
 
