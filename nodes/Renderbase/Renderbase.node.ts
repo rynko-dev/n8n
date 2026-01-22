@@ -124,6 +124,49 @@ export class Renderbase implements INodeType {
       },
 
       // ===================
+      // Team Field (for all document generation)
+      // ===================
+      {
+        displayName: 'Team',
+        name: 'teamId',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getTeams',
+        },
+        required: true,
+        displayOptions: {
+          show: {
+            resource: ['document', 'batch'],
+            operation: ['generate', 'generatePdf', 'generateExcel'],
+          },
+        },
+        default: '',
+        description: 'Select a team from your Renderbase account',
+      },
+
+      // ===================
+      // Workspace Field (for all document generation)
+      // ===================
+      {
+        displayName: 'Workspace',
+        name: 'workspaceId',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getWorkspaces',
+          loadOptionsDependsOn: ['teamId'],
+        },
+        required: true,
+        displayOptions: {
+          show: {
+            resource: ['document', 'batch'],
+            operation: ['generate', 'generatePdf', 'generateExcel'],
+          },
+        },
+        default: '',
+        description: 'Select a workspace within the selected team',
+      },
+
+      // ===================
       // Template Field (for document generate)
       // ===================
       {
@@ -132,6 +175,7 @@ export class Renderbase implements INodeType {
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getTemplates',
+          loadOptionsDependsOn: ['workspaceId'],
         },
         required: true,
         displayOptions: {
@@ -149,6 +193,7 @@ export class Renderbase implements INodeType {
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getPdfTemplates',
+          loadOptionsDependsOn: ['workspaceId'],
         },
         required: true,
         displayOptions: {
@@ -166,6 +211,7 @@ export class Renderbase implements INodeType {
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getExcelTemplates',
+          loadOptionsDependsOn: ['workspaceId'],
         },
         required: true,
         displayOptions: {
@@ -315,6 +361,7 @@ export class Renderbase implements INodeType {
         type: 'options',
         typeOptions: {
           loadOptionsMethod: 'getTemplates',
+          loadOptionsDependsOn: ['workspaceId'],
         },
         required: true,
         displayOptions: {
@@ -459,7 +506,7 @@ export class Renderbase implements INodeType {
 
   methods = {
     loadOptions: {
-      async getTemplates(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+      async getTeams(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         const returnData: INodePropertyOptions[] = [];
         const credentials = await this.getCredentials('renderbaseApi');
         const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
@@ -467,16 +514,79 @@ export class Renderbase implements INodeType {
         try {
           const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
             method: 'GET' as IHttpRequestMethods,
-            url: `${baseUrl}/api/v1/templates`,
-            qs: { limit: 100 },
+            url: `${baseUrl}/api/v1/integration-api/teams`,
             json: true,
           });
 
-          const templates = response.data || [];
+          const teams = response || [];
+          for (const team of teams) {
+            returnData.push({
+              name: team.name,
+              value: team.id,
+            });
+          }
+        } catch (error) {
+          // Return empty if failed
+        }
+
+        return returnData;
+      },
+
+      async getWorkspaces(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+        const returnData: INodePropertyOptions[] = [];
+        const credentials = await this.getCredentials('renderbaseApi');
+        const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+        const teamId = this.getCurrentNodeParameter('teamId') as string;
+
+        if (!teamId) {
+          return returnData;
+        }
+
+        try {
+          const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+            method: 'GET' as IHttpRequestMethods,
+            url: `${baseUrl}/api/v1/integration-api/workspaces`,
+            qs: { teamId },
+            json: true,
+          });
+
+          const workspaces = response || [];
+          for (const workspace of workspaces) {
+            returnData.push({
+              name: workspace.name,
+              value: workspace.id,
+            });
+          }
+        } catch (error) {
+          // Return empty if failed
+        }
+
+        return returnData;
+      },
+
+      async getTemplates(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+        const returnData: INodePropertyOptions[] = [];
+        const credentials = await this.getCredentials('renderbaseApi');
+        const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+        const workspaceId = this.getCurrentNodeParameter('workspaceId') as string;
+
+        if (!workspaceId) {
+          return returnData;
+        }
+
+        try {
+          const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+            method: 'GET' as IHttpRequestMethods,
+            url: `${baseUrl}/api/v1/integration-api/templates`,
+            qs: { workspaceId },
+            json: true,
+          });
+
+          const templates = response || [];
           for (const template of templates) {
             returnData.push({
-              name: `${template.name} (${template.format})`,
-              value: template.id,
+              name: `${template.name} (${template.workspaceName})`,
+              value: template.shortId,
               description: template.description || '',
             });
           }
@@ -491,20 +601,29 @@ export class Renderbase implements INodeType {
         const returnData: INodePropertyOptions[] = [];
         const credentials = await this.getCredentials('renderbaseApi');
         const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+        const workspaceId = this.getCurrentNodeParameter('workspaceId') as string;
+
+        if (!workspaceId) {
+          return returnData;
+        }
 
         try {
           const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
             method: 'GET' as IHttpRequestMethods,
-            url: `${baseUrl}/api/v1/templates`,
-            qs: { format: 'pdf', limit: 100 },
+            url: `${baseUrl}/api/v1/integration-api/templates`,
+            qs: { workspaceId },
             json: true,
           });
 
-          const templates = response.data || [];
-          for (const template of templates) {
+          const templates = response || [];
+          // Filter to only show templates that support PDF output
+          const pdfTemplates = templates.filter(
+            (t: { outputFormats?: string[] }) => t.outputFormats && t.outputFormats.includes('pdf')
+          );
+          for (const template of pdfTemplates) {
             returnData.push({
-              name: template.name,
-              value: template.id,
+              name: `${template.name} (${template.workspaceName})`,
+              value: template.shortId,
               description: template.description || '',
             });
           }
@@ -519,20 +638,29 @@ export class Renderbase implements INodeType {
         const returnData: INodePropertyOptions[] = [];
         const credentials = await this.getCredentials('renderbaseApi');
         const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+        const workspaceId = this.getCurrentNodeParameter('workspaceId') as string;
+
+        if (!workspaceId) {
+          return returnData;
+        }
 
         try {
           const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
             method: 'GET' as IHttpRequestMethods,
-            url: `${baseUrl}/api/v1/templates`,
-            qs: { format: 'excel', limit: 100 },
+            url: `${baseUrl}/api/v1/integration-api/templates`,
+            qs: { workspaceId },
             json: true,
           });
 
-          const templates = response.data || [];
-          for (const template of templates) {
+          const templates = response || [];
+          // Filter to only show templates that support Excel output
+          const excelTemplates = templates.filter(
+            (t: { outputFormats?: string[] }) => t.outputFormats && t.outputFormats.includes('excel')
+          );
+          for (const template of excelTemplates) {
             returnData.push({
-              name: template.name,
-              value: template.id,
+              name: `${template.name} (${template.workspaceName})`,
+              value: template.shortId,
               description: template.description || '',
             });
           }
@@ -559,23 +687,23 @@ export class Renderbase implements INodeType {
 
         if (resource === 'document') {
           if (operation === 'generate') {
-            responseData = await this.generateDocument(i, baseUrl);
+            responseData = await Renderbase.prototype.generateDocument.call(this, i, baseUrl);
           } else if (operation === 'generatePdf') {
-            responseData = await this.generateDocument(i, baseUrl, 'pdf');
+            responseData = await Renderbase.prototype.generateDocument.call(this, i, baseUrl, 'pdf');
           } else if (operation === 'generateExcel') {
-            responseData = await this.generateDocument(i, baseUrl, 'excel');
+            responseData = await Renderbase.prototype.generateDocument.call(this, i, baseUrl, 'excel');
           } else if (operation === 'get') {
-            responseData = await this.getDocument(i, baseUrl);
+            responseData = await Renderbase.prototype.getDocument.call(this, i, baseUrl);
           } else if (operation === 'search') {
-            responseData = await this.searchDocuments(i, baseUrl);
+            responseData = await Renderbase.prototype.searchDocuments.call(this, i, baseUrl);
           } else {
             throw new Error(`Unknown operation: ${operation}`);
           }
         } else if (resource === 'batch') {
           if (operation === 'generate') {
-            responseData = await this.generateBatch(i, baseUrl);
+            responseData = await Renderbase.prototype.generateBatch.call(this, i, baseUrl);
           } else if (operation === 'get') {
-            responseData = await this.getBatch(i, baseUrl);
+            responseData = await Renderbase.prototype.getBatch.call(this, i, baseUrl);
           } else {
             throw new Error(`Unknown operation: ${operation}`);
           }
@@ -598,11 +726,15 @@ export class Renderbase implements INodeType {
 
   private async generateDocument(this: IExecuteFunctions, itemIndex: number, baseUrl: string, format?: string): Promise<IDataObject> {
     const templateId = this.getNodeParameter('templateId', itemIndex) as string;
+    const teamId = this.getNodeParameter('teamId', itemIndex) as string;
+    const workspaceId = this.getNodeParameter('workspaceId', itemIndex) as string;
     const options = this.getNodeParameter('options', itemIndex, {}) as IDataObject;
     const variablesCollection = this.getNodeParameter('variables', itemIndex, {}) as IDataObject;
 
     const body: IDataObject = {
       templateId,
+      teamId,
+      workspaceId,
     };
 
     // Set format
@@ -672,6 +804,8 @@ export class Renderbase implements INodeType {
 
   private async generateBatch(this: IExecuteFunctions, itemIndex: number, baseUrl: string): Promise<IDataObject> {
     const templateId = this.getNodeParameter('templateId', itemIndex) as string;
+    const teamId = this.getNodeParameter('teamId', itemIndex) as string;
+    const workspaceId = this.getNodeParameter('workspaceId', itemIndex) as string;
     const format = this.getNodeParameter('format', itemIndex) as string;
     const documentsCollection = this.getNodeParameter('documents', itemIndex, {}) as IDataObject;
 
@@ -693,6 +827,8 @@ export class Renderbase implements INodeType {
 
     const body: IDataObject = {
       templateId,
+      teamId,
+      workspaceId,
       format,
       documents,
     };
