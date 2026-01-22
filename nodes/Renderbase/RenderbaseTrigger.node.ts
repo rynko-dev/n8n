@@ -55,11 +55,6 @@ export class RenderbaseTrigger implements INodeType {
             value: 'document.failed',
             description: 'Triggers when a document generation fails',
           },
-          {
-            name: 'Batch Completed',
-            value: 'batch.completed',
-            description: 'Triggers when a batch of documents is finished generating',
-          },
         ],
       },
     ],

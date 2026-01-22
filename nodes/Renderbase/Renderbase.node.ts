@@ -41,10 +41,6 @@ export class Renderbase implements INodeType {
             name: 'Document',
             value: 'document',
           },
-          {
-            name: 'Batch',
-            value: 'batch',
-          },
         ],
         default: 'document',
       },
@@ -95,34 +91,6 @@ export class Renderbase implements INodeType {
         default: 'generate',
       },
 
-      // Batch Operations
-      {
-        displayName: 'Operation',
-        name: 'operation',
-        type: 'options',
-        noDataExpression: true,
-        displayOptions: {
-          show: {
-            resource: ['batch'],
-          },
-        },
-        options: [
-          {
-            name: 'Generate',
-            value: 'generate',
-            description: 'Generate multiple documents from a template',
-            action: 'Generate batch documents',
-          },
-          {
-            name: 'Get',
-            value: 'get',
-            description: 'Get a batch job by ID',
-            action: 'Get a batch job',
-          },
-        ],
-        default: 'generate',
-      },
-
       // ===================
       // Team Field (for all document generation)
       // ===================
@@ -136,7 +104,7 @@ export class Renderbase implements INodeType {
         required: true,
         displayOptions: {
           show: {
-            resource: ['document', 'batch'],
+            resource: ['document'],
             operation: ['generate', 'generatePdf', 'generateExcel'],
           },
         },
@@ -158,7 +126,7 @@ export class Renderbase implements INodeType {
         required: true,
         displayOptions: {
           show: {
-            resource: ['document', 'batch'],
+            resource: ['document'],
             operation: ['generate', 'generatePdf', 'generateExcel'],
           },
         },
@@ -262,24 +230,6 @@ export class Renderbase implements INodeType {
       },
 
       // ===================
-      // Get Batch by ID
-      // ===================
-      {
-        displayName: 'Batch ID',
-        name: 'batchId',
-        type: 'string',
-        required: true,
-        displayOptions: {
-          show: {
-            resource: ['batch'],
-            operation: ['get'],
-          },
-        },
-        default: '',
-        description: 'The ID of the batch job to retrieve',
-      },
-
-      // ===================
       // Search Filters
       // ===================
       {
@@ -350,83 +300,6 @@ export class Renderbase implements INodeType {
           { name: 'Excel', value: 'excel' },
         ],
         default: 'pdf',
-      },
-
-      // ===================
-      // Batch Template
-      // ===================
-      {
-        displayName: 'Template',
-        name: 'templateId',
-        type: 'options',
-        typeOptions: {
-          loadOptionsMethod: 'getTemplates',
-          loadOptionsDependsOn: ['workspaceId'],
-        },
-        required: true,
-        displayOptions: {
-          show: {
-            resource: ['batch'],
-            operation: ['generate'],
-          },
-        },
-        default: '',
-        description: 'The template to use for batch generation',
-      },
-      {
-        displayName: 'Output Format',
-        name: 'format',
-        type: 'options',
-        displayOptions: {
-          show: {
-            resource: ['batch'],
-            operation: ['generate'],
-          },
-        },
-        options: [
-          { name: 'PDF', value: 'pdf' },
-          { name: 'Excel', value: 'excel' },
-        ],
-        default: 'pdf',
-        required: true,
-      },
-      {
-        displayName: 'Documents',
-        name: 'documents',
-        type: 'fixedCollection',
-        typeOptions: {
-          multipleValues: true,
-        },
-        displayOptions: {
-          show: {
-            resource: ['batch'],
-            operation: ['generate'],
-          },
-        },
-        default: {},
-        placeholder: 'Add Document',
-        options: [
-          {
-            name: 'documentValues',
-            displayName: 'Document',
-            values: [
-              {
-                displayName: 'Variables (JSON)',
-                name: 'variables',
-                type: 'string',
-                default: '',
-                description: 'JSON object with template variables',
-              },
-              {
-                displayName: 'File Name',
-                name: 'fileName',
-                type: 'string',
-                default: '',
-                description: 'Custom file name (without extension)',
-              },
-            ],
-          },
-        ],
       },
 
       // ===================
@@ -699,14 +572,6 @@ export class Renderbase implements INodeType {
           } else {
             throw new Error(`Unknown operation: ${operation}`);
           }
-        } else if (resource === 'batch') {
-          if (operation === 'generate') {
-            responseData = await Renderbase.prototype.generateBatch.call(this, i, baseUrl);
-          } else if (operation === 'get') {
-            responseData = await Renderbase.prototype.getBatch.call(this, i, baseUrl);
-          } else {
-            throw new Error(`Unknown operation: ${operation}`);
-          }
         } else {
           throw new Error(`Unknown resource: ${resource}`);
         }
@@ -800,58 +665,5 @@ export class Renderbase implements INodeType {
     });
 
     return response;
-  }
-
-  private async generateBatch(this: IExecuteFunctions, itemIndex: number, baseUrl: string): Promise<IDataObject> {
-    const templateId = this.getNodeParameter('templateId', itemIndex) as string;
-    const teamId = this.getNodeParameter('teamId', itemIndex) as string;
-    const workspaceId = this.getNodeParameter('workspaceId', itemIndex) as string;
-    const format = this.getNodeParameter('format', itemIndex) as string;
-    const documentsCollection = this.getNodeParameter('documents', itemIndex, {}) as IDataObject;
-
-    const documentValues = (documentsCollection as IDataObject).documentValues as IDataObject[] || [];
-    const documents = documentValues.map((d) => {
-      const doc: IDataObject = {};
-      if (d.variables) {
-        try {
-          doc.variables = JSON.parse(d.variables as string);
-        } catch {
-          // Ignore invalid JSON
-        }
-      }
-      if (d.fileName) {
-        doc.fileName = d.fileName;
-      }
-      return doc;
-    });
-
-    const body: IDataObject = {
-      templateId,
-      teamId,
-      workspaceId,
-      format,
-      documents,
-    };
-
-    const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
-      method: 'POST' as IHttpRequestMethods,
-      url: `${baseUrl}/api/v1/batches/generate`,
-      body,
-      json: true,
-    });
-
-    return response.data || response;
-  }
-
-  private async getBatch(this: IExecuteFunctions, itemIndex: number, baseUrl: string): Promise<IDataObject> {
-    const batchId = this.getNodeParameter('batchId', itemIndex) as string;
-
-    const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
-      method: 'GET' as IHttpRequestMethods,
-      url: `${baseUrl}/api/v1/batches/${batchId}`,
-      json: true,
-    });
-
-    return response.data || response;
   }
 }
