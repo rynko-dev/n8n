@@ -1,3 +1,3 @@
-export * from './credentials/RenderbaseApi.credentials';
-export * from './nodes/Renderbase/Renderbase.node';
-export * from './nodes/Renderbase/RenderbaseTrigger.node';
+export * from './credentials/RynkoApi.credentials';
+export * from './nodes/Rynko/Rynko.node';
+export * from './nodes/Rynko/RynkoTrigger.node';

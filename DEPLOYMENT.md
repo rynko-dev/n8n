@@ -1,6 +1,6 @@
-# Renderbase n8n Integration - Deployment Guide
+# Rynko n8n Integration - Deployment Guide
 
-This guide covers deploying the Renderbase n8n community node package.
+This guide covers deploying the Rynko n8n community node package.
 
 ## Table of Contents
 
@@ -26,7 +26,7 @@ This guide covers deploying the Renderbase n8n community node package.
 
 ### Backend Requirements
 
-The Renderbase backend must have:
+The Rynko backend must have:
 - API Key authentication enabled
 - **Integration API module deployed** (`/api/v1/integration-api/*` endpoints) - Required for team/workspace/template cascading selection
 - Webhook subscriptions module deployed
@@ -36,7 +36,7 @@ The Renderbase backend must have:
 
 ## Cascading Team/Workspace/Template Selection
 
-The Renderbase n8n node implements cascading dropdown selection for Team → Workspace → Template. This ensures users can only select templates from workspaces they have access to.
+The Rynko n8n node implements cascading dropdown selection for Team → Workspace → Template. This ensures users can only select templates from workspaces they have access to.
 
 ### How It Works
 
@@ -97,7 +97,7 @@ The node uses n8n's `loadOptions` methods with `loadOptionsDependsOn` to create 
 ### 1. Clone and Install
 
 ```bash
-cd integrations/n8n-renderbase
+cd integrations/n8n-rynko
 npm install
 ```
 
@@ -112,11 +112,11 @@ This compiles TypeScript to JavaScript and copies icons.
 ### 3. Link for Local Development
 
 ```bash
-# In n8n-renderbase directory
+# In n8n-rynko directory
 npm link
 
 # In your n8n installation directory
-npm link n8n-nodes-renderbase
+npm link n8n-nodes-rynko
 ```
 
 ### 4. Start n8n in Development Mode
@@ -155,12 +155,12 @@ After building:
 ```
 dist/
 ├── credentials/
-│   └── RenderbaseApi.credentials.js
+│   └── RynkoApi.credentials.js
 └── nodes/
-    └── Renderbase/
-        ├── Renderbase.node.js
-        ├── RenderbaseTrigger.node.js
-        └── renderbase.svg
+    └── Rynko/
+        ├── Rynko.node.js
+        ├── RynkoTrigger.node.js
+        └── rynko.svg
 ```
 
 ---
@@ -171,7 +171,7 @@ dist/
 
 1. Go to **Settings** → **Community Nodes**
 2. Click **Install a community node**
-3. Enter: `n8n-nodes-renderbase`
+3. Enter: `n8n-nodes-rynko`
 4. Click **Install**
 
 ### Option 2: Manual Installation (Self-hosted)
@@ -181,7 +181,7 @@ dist/
 cd ~/.n8n
 
 # Install the package
-npm install n8n-nodes-renderbase
+npm install n8n-nodes-rynko
 
 # Restart n8n
 n8n start
@@ -195,7 +195,7 @@ Add to your Dockerfile:
 FROM n8nio/n8n
 
 USER root
-RUN cd /usr/local/lib/node_modules/n8n && npm install n8n-nodes-renderbase
+RUN cd /usr/local/lib/node_modules/n8n && npm install n8n-nodes-rynko
 USER node
 ```
 
@@ -208,16 +208,16 @@ services:
     image: n8nio/n8n
     environment:
       - N8N_COMMUNITY_PACKAGES_ALLOW_TOOL_USAGE=true
-      - EXTRA_NODE_MODULES=n8n-nodes-renderbase
+      - EXTRA_NODE_MODULES=n8n-nodes-rynko
 ```
 
 ---
 
 ## API Key Configuration
 
-### 1. Generate API Key in Renderbase
+### 1. Generate API Key in Rynko
 
-1. Log in to your Renderbase dashboard at https://app.renderbase.dev
+1. Log in to your Rynko dashboard at https://app.rynko.dev
 2. Go to **Settings** → **API Keys**
 3. Click **Create New API Key**
 4. Give it a descriptive name (e.g., "n8n Integration")
@@ -226,10 +226,10 @@ services:
 ### 2. Configure Credentials in n8n
 
 1. In n8n, go to **Credentials** → **New**
-2. Search for "Renderbase API"
+2. Search for "Rynko API"
 3. Enter:
-   - **API Key:** Your Renderbase API key
-   - **API Base URL:** `https://api.renderbase.dev` (default, change if self-hosted)
+   - **API Key:** Your Rynko API key
+   - **API Base URL:** `https://api.rynko.dev` (default, change if self-hosted)
 4. Click **Save**
 
 ### 3. Webhook URL Configuration
@@ -270,7 +270,7 @@ npm publish
 ### 4. Verify Publication
 
 ```bash
-npm view n8n-nodes-renderbase
+npm view n8n-nodes-rynko
 ```
 
 ---
@@ -318,7 +318,7 @@ npm view n8n-nodes-renderbase
 **Webhook Triggers Not Working**
 - Verify n8n is accessible from internet
 - Check WEBHOOK_URL is configured
-- Verify webhook subscription created in Renderbase
+- Verify webhook subscription created in Rynko
 
 **TypeScript Build Errors**
 - Run `npm install` to update dependencies
@@ -354,7 +354,7 @@ n8n start
 
 - **n8n Community Forum:** https://community.n8n.io
 - **n8n Documentation:** https://docs.n8n.io
-- **Renderbase Support:** support@renderbase.dev
+- **Rynko Support:** support@rynko.dev
 
 ---
 
@@ -363,7 +363,7 @@ n8n start
 ### Package Structure
 
 ```
-n8n-renderbase/
+n8n-rynko/
 ├── package.json           # Package configuration
 ├── tsconfig.json          # TypeScript config
 ├── gulpfile.js            # Build icons task
@@ -371,17 +371,17 @@ n8n-renderbase/
 ├── DEPLOYMENT.md          # This guide
 ├── README.md              # Documentation
 ├── credentials/
-│   └── RenderbaseApi.credentials.ts
+│   └── RynkoApi.credentials.ts
 └── nodes/
-    └── Renderbase/
-        ├── Renderbase.node.ts        # Action node (with cascading loadOptions)
-        ├── RenderbaseTrigger.node.ts # Trigger node
-        └── renderbase.svg            # Icon
+    └── Rynko/
+        ├── Rynko.node.ts        # Action node (with cascading loadOptions)
+        ├── RynkoTrigger.node.ts # Trigger node
+        └── rynko.svg            # Icon
 ```
 
 ### Key Node Methods
 
-The `Renderbase.node.ts` implements these loadOptions methods for cascading selection:
+The `Rynko.node.ts` implements these loadOptions methods for cascading selection:
 
 | Method | Purpose | Dependencies |
 |--------|---------|--------------|

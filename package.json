@@ -1,11 +1,11 @@
 {
-  "name": "n8n-nodes-renderbase",
+  "name": "n8n-nodes-rynko",
   "version": "1.0.0",
-  "description": "n8n community node for Renderbase - Generate PDF and Excel documents from templates",
+  "description": "n8n community node for Rynko - Generate PDF and Excel documents from templates",
   "keywords": [
     "n8n-community-node-package",
     "n8n",
-    "renderbase",
+    "rynko",
     "pdf",
     "excel",
     "documents",
@@ -13,14 +13,14 @@
     "automation"
   ],
   "license": "MIT",
-  "homepage": "https://renderbase.dev",
+  "homepage": "https://rynko.dev",
   "author": {
-    "name": "Renderbase",
-    "email": "support@renderbase.dev"
+    "name": "Rynko",
+    "email": "support@rynko.dev"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/renderbase/n8n-nodes-renderbase.git"
+    "url": "https://github.com/rynko/n8n-nodes-rynko.git"
   },
   "main": "index.js",
   "scripts": {
@@ -37,11 +37,11 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/RenderbaseApi.credentials.js"
+      "dist/credentials/RynkoApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/Renderbase/Renderbase.node.js",
-      "dist/nodes/Renderbase/RenderbaseTrigger.node.js"
+      "dist/nodes/Rynko/Rynko.node.js",
+      "dist/nodes/Rynko/RynkoTrigger.node.js"
     ]
   },
   "devDependencies": {

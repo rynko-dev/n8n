@@ -1,17 +1,17 @@
-# Renderbase n8n Community Node
+# Rynko n8n Community Node
 
-Official n8n community node for Renderbase - the document generation platform with unified template design for PDF and Excel documents.
+Official n8n community node for Rynko - the document generation platform with unified template design for PDF and Excel documents.
 
 ## Features
 
-### Trigger Node: Renderbase Trigger
+### Trigger Node: Rynko Trigger
 
 Starts workflows when document events occur:
 - **Document Completed** - When a document is successfully generated
 - **Document Failed** - When document generation fails
 - **Batch Completed** - When a batch generation completes
 
-### Action Node: Renderbase
+### Action Node: Rynko
 
 Perform document generation operations:
 - **Generate PDF** - Generate a PDF document from a template
@@ -26,21 +26,21 @@ Perform document generation operations:
 
 1. Go to **Settings** → **Community Nodes**
 2. Click **Install a community node**
-3. Enter: `n8n-nodes-renderbase`
+3. Enter: `n8n-nodes-rynko`
 4. Click **Install**
 
 ### Manual Installation
 
 ```bash
-npm install n8n-nodes-renderbase
+npm install n8n-nodes-rynko
 ```
 
 ## Configuration
 
 ### 1. Generate API Key
 
-Generate an API key in your Renderbase dashboard:
-1. Log in to https://app.renderbase.dev
+Generate an API key in your Rynko dashboard:
+1. Log in to https://app.rynko.dev
 2. Go to **Settings** → **API Keys**
 3. Click **Create New API Key**
 4. Copy the generated key
@@ -48,7 +48,7 @@ Generate an API key in your Renderbase dashboard:
 ### 2. Add Credentials in n8n
 
 1. Go to **Credentials** → **New**
-2. Search for "Renderbase API"
+2. Search for "Rynko API"
 3. Enter your API Key
 4. Click **Save**
 
@@ -56,7 +56,7 @@ Generate an API key in your Renderbase dashboard:
 
 ### Generate a PDF Document
 
-1. Add **Renderbase** node
+1. Add **Rynko** node
 2. Select operation: **Generate PDF**
 3. Choose template from dropdown
 4. Add template variables (optional)
@@ -64,7 +64,7 @@ Generate an API key in your Renderbase dashboard:
 
 ### Generate Excel Report
 
-1. Add **Renderbase** node
+1. Add **Rynko** node
 2. Select operation: **Generate Excel**
 3. Choose template from dropdown
 4. Add template variables
@@ -72,14 +72,14 @@ Generate an API key in your Renderbase dashboard:
 
 ### Trigger on Document Completion
 
-1. Add **Renderbase Trigger** node
+1. Add **Rynko Trigger** node
 2. Select event: **Document Completed**
 3. Connect to your workflow
 4. Activate workflow
 
 ### Generate Batch Documents
 
-1. Add **Renderbase** node
+1. Add **Rynko** node
 2. Select operation: **Generate Batch**
 3. Choose template
 4. Provide array of documents with variables
@@ -88,14 +88,14 @@ Generate an API key in your Renderbase dashboard:
 ## Project Structure
 
 ```
-n8n-renderbase/
+n8n-rynko/
 ├── credentials/
-│   └── RenderbaseApi.credentials.ts
+│   └── RynkoApi.credentials.ts
 ├── nodes/
-│   └── Renderbase/
-│       ├── Renderbase.node.ts
-│       ├── RenderbaseTrigger.node.ts
-│       └── renderbase.svg
+│   └── Rynko/
+│       ├── Rynko.node.ts
+│       ├── RynkoTrigger.node.ts
+│       └── rynko.svg
 ├── package.json
 ├── tsconfig.json
 ├── DEPLOYMENT.md
@@ -146,12 +146,12 @@ When generating documents, you can optionally specify a `workspaceId` to generat
 
 - [Deployment Guide](./DEPLOYMENT.md)
 - [n8n Community Nodes](https://docs.n8n.io/integrations/community-nodes/)
-- [Renderbase API Documentation](https://docs.renderbase.dev/api)
+- [Rynko API Documentation](https://docs.rynko.dev/api)
 
 ## Support
 
-- Email: support@renderbase.dev
-- Documentation: https://docs.renderbase.dev
+- Email: support@rynko.dev
+- Documentation: https://docs.rynko.dev
 - n8n Community: https://community.n8n.io
 
 ## License

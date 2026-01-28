@@ -8,23 +8,23 @@ import type {
   IHttpRequestMethods,
 } from 'n8n-workflow';
 
-export class RenderbaseTrigger implements INodeType {
+export class RynkoTrigger implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'Renderbase Trigger',
-    name: 'renderbaseTrigger',
-    icon: 'file:renderbase.svg',
+    displayName: 'Rynko Trigger',
+    name: 'rynkoTrigger',
+    icon: 'file:rynko.svg',
     group: ['trigger'],
     version: 1,
     subtitle: '={{$parameter["event"]}}',
-    description: 'Starts the workflow when Renderbase events occur',
+    description: 'Starts the workflow when Rynko events occur',
     defaults: {
-      name: 'Renderbase Trigger',
+      name: 'Rynko Trigger',
     },
     inputs: [],
     outputs: ['main'],
     credentials: [
       {
-        name: 'renderbaseApi',
+        name: 'rynkoApi',
         required: true,
       },
     ],
@@ -66,13 +66,13 @@ export class RenderbaseTrigger implements INodeType {
         const webhookUrl = this.getNodeWebhookUrl('default');
         const webhookData = this.getWorkflowStaticData('node');
         const event = this.getNodeParameter('event') as string;
-        const credentials = await this.getCredentials('renderbaseApi');
-        const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+        const credentials = await this.getCredentials('rynkoApi');
+        const baseUrl = credentials.baseUrl as string || 'https://api.rynko.dev';
 
         // Check if we have a stored webhook ID
         if (webhookData.webhookId) {
           try {
-            await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+            await this.helpers.requestWithAuthentication.call(this, 'rynkoApi', {
               method: 'GET' as IHttpRequestMethods,
               url: `${baseUrl}/api/v1/webhook-subscriptions/${webhookData.webhookId}`,
               json: true,
@@ -87,7 +87,7 @@ export class RenderbaseTrigger implements INodeType {
 
         // List webhooks and check if one exists with our URL
         try {
-          const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+          const response = await this.helpers.requestWithAuthentication.call(this, 'rynkoApi', {
             method: 'GET' as IHttpRequestMethods,
             url: `${baseUrl}/api/v1/webhook-subscriptions`,
             json: true,
@@ -113,8 +113,8 @@ export class RenderbaseTrigger implements INodeType {
         const webhookUrl = this.getNodeWebhookUrl('default');
         const webhookData = this.getWorkflowStaticData('node');
         const event = this.getNodeParameter('event') as string;
-        const credentials = await this.getCredentials('renderbaseApi');
-        const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+        const credentials = await this.getCredentials('rynkoApi');
+        const baseUrl = credentials.baseUrl as string || 'https://api.rynko.dev';
 
         const body: IDataObject = {
           url: webhookUrl,
@@ -123,7 +123,7 @@ export class RenderbaseTrigger implements INodeType {
         };
 
         try {
-          const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+          const response = await this.helpers.requestWithAuthentication.call(this, 'rynkoApi', {
             method: 'POST' as IHttpRequestMethods,
             url: `${baseUrl}/api/v1/webhook-subscriptions`,
             body,
@@ -139,12 +139,12 @@ export class RenderbaseTrigger implements INodeType {
 
       async delete(this: IHookFunctions): Promise<boolean> {
         const webhookData = this.getWorkflowStaticData('node');
-        const credentials = await this.getCredentials('renderbaseApi');
-        const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+        const credentials = await this.getCredentials('rynkoApi');
+        const baseUrl = credentials.baseUrl as string || 'https://api.rynko.dev';
 
         if (webhookData.webhookId) {
           try {
-            await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+            await this.helpers.requestWithAuthentication.call(this, 'rynkoApi', {
               method: 'DELETE' as IHttpRequestMethods,
               url: `${baseUrl}/api/v1/webhook-subscriptions/${webhookData.webhookId}`,
               json: true,

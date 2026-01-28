@@ -9,23 +9,23 @@ import type {
   IHttpRequestMethods,
 } from 'n8n-workflow';
 
-export class Renderbase implements INodeType {
+export class Rynko implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'Renderbase',
-    name: 'renderbase',
-    icon: 'file:renderbase.svg',
+    displayName: 'Rynko',
+    name: 'rynko',
+    icon: 'file:rynko.svg',
     group: ['transform'],
     version: 1,
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
     description: 'Generate PDF and Excel documents from templates',
     defaults: {
-      name: 'Renderbase',
+      name: 'Rynko',
     },
     inputs: ['main'],
     outputs: ['main'],
     credentials: [
       {
-        name: 'renderbaseApi',
+        name: 'rynkoApi',
         required: true,
       },
     ],
@@ -109,7 +109,7 @@ export class Renderbase implements INodeType {
           },
         },
         default: '',
-        description: 'Select a team from your Renderbase account',
+        description: 'Select a team from your Rynko account',
       },
 
       // ===================
@@ -381,11 +381,11 @@ export class Renderbase implements INodeType {
     loadOptions: {
       async getTeams(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         const returnData: INodePropertyOptions[] = [];
-        const credentials = await this.getCredentials('renderbaseApi');
-        const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+        const credentials = await this.getCredentials('rynkoApi');
+        const baseUrl = credentials.baseUrl as string || 'https://api.rynko.dev';
 
         try {
-          const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+          const response = await this.helpers.requestWithAuthentication.call(this, 'rynkoApi', {
             method: 'GET' as IHttpRequestMethods,
             url: `${baseUrl}/api/v1/integration-api/teams`,
             json: true,
@@ -407,8 +407,8 @@ export class Renderbase implements INodeType {
 
       async getWorkspaces(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         const returnData: INodePropertyOptions[] = [];
-        const credentials = await this.getCredentials('renderbaseApi');
-        const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+        const credentials = await this.getCredentials('rynkoApi');
+        const baseUrl = credentials.baseUrl as string || 'https://api.rynko.dev';
         const teamId = this.getCurrentNodeParameter('teamId') as string;
 
         if (!teamId) {
@@ -416,7 +416,7 @@ export class Renderbase implements INodeType {
         }
 
         try {
-          const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+          const response = await this.helpers.requestWithAuthentication.call(this, 'rynkoApi', {
             method: 'GET' as IHttpRequestMethods,
             url: `${baseUrl}/api/v1/integration-api/workspaces`,
             qs: { teamId },
@@ -439,8 +439,8 @@ export class Renderbase implements INodeType {
 
       async getTemplates(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         const returnData: INodePropertyOptions[] = [];
-        const credentials = await this.getCredentials('renderbaseApi');
-        const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+        const credentials = await this.getCredentials('rynkoApi');
+        const baseUrl = credentials.baseUrl as string || 'https://api.rynko.dev';
         const workspaceId = this.getCurrentNodeParameter('workspaceId') as string;
 
         if (!workspaceId) {
@@ -448,7 +448,7 @@ export class Renderbase implements INodeType {
         }
 
         try {
-          const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+          const response = await this.helpers.requestWithAuthentication.call(this, 'rynkoApi', {
             method: 'GET' as IHttpRequestMethods,
             url: `${baseUrl}/api/v1/integration-api/templates`,
             qs: { workspaceId },
@@ -472,8 +472,8 @@ export class Renderbase implements INodeType {
 
       async getPdfTemplates(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         const returnData: INodePropertyOptions[] = [];
-        const credentials = await this.getCredentials('renderbaseApi');
-        const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+        const credentials = await this.getCredentials('rynkoApi');
+        const baseUrl = credentials.baseUrl as string || 'https://api.rynko.dev';
         const workspaceId = this.getCurrentNodeParameter('workspaceId') as string;
 
         if (!workspaceId) {
@@ -481,7 +481,7 @@ export class Renderbase implements INodeType {
         }
 
         try {
-          const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+          const response = await this.helpers.requestWithAuthentication.call(this, 'rynkoApi', {
             method: 'GET' as IHttpRequestMethods,
             url: `${baseUrl}/api/v1/integration-api/templates`,
             qs: { workspaceId },
@@ -509,8 +509,8 @@ export class Renderbase implements INodeType {
 
       async getExcelTemplates(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
         const returnData: INodePropertyOptions[] = [];
-        const credentials = await this.getCredentials('renderbaseApi');
-        const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+        const credentials = await this.getCredentials('rynkoApi');
+        const baseUrl = credentials.baseUrl as string || 'https://api.rynko.dev';
         const workspaceId = this.getCurrentNodeParameter('workspaceId') as string;
 
         if (!workspaceId) {
@@ -518,7 +518,7 @@ export class Renderbase implements INodeType {
         }
 
         try {
-          const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+          const response = await this.helpers.requestWithAuthentication.call(this, 'rynkoApi', {
             method: 'GET' as IHttpRequestMethods,
             url: `${baseUrl}/api/v1/integration-api/templates`,
             qs: { workspaceId },
@@ -551,8 +551,8 @@ export class Renderbase implements INodeType {
     const returnData: INodeExecutionData[] = [];
     const resource = this.getNodeParameter('resource', 0) as string;
     const operation = this.getNodeParameter('operation', 0) as string;
-    const credentials = await this.getCredentials('renderbaseApi');
-    const baseUrl = credentials.baseUrl as string || 'https://api.renderbase.dev';
+    const credentials = await this.getCredentials('rynkoApi');
+    const baseUrl = credentials.baseUrl as string || 'https://api.rynko.dev';
 
     for (let i = 0; i < items.length; i++) {
       try {
@@ -560,15 +560,15 @@ export class Renderbase implements INodeType {
 
         if (resource === 'document') {
           if (operation === 'generate') {
-            responseData = await Renderbase.prototype.generateDocument.call(this, i, baseUrl);
+            responseData = await Rynko.prototype.generateDocument.call(this, i, baseUrl);
           } else if (operation === 'generatePdf') {
-            responseData = await Renderbase.prototype.generateDocument.call(this, i, baseUrl, 'pdf');
+            responseData = await Rynko.prototype.generateDocument.call(this, i, baseUrl, 'pdf');
           } else if (operation === 'generateExcel') {
-            responseData = await Renderbase.prototype.generateDocument.call(this, i, baseUrl, 'excel');
+            responseData = await Rynko.prototype.generateDocument.call(this, i, baseUrl, 'excel');
           } else if (operation === 'get') {
-            responseData = await Renderbase.prototype.getDocument.call(this, i, baseUrl);
+            responseData = await Rynko.prototype.getDocument.call(this, i, baseUrl);
           } else if (operation === 'search') {
-            responseData = await Renderbase.prototype.searchDocuments.call(this, i, baseUrl);
+            responseData = await Rynko.prototype.searchDocuments.call(this, i, baseUrl);
           } else {
             throw new Error(`Unknown operation: ${operation}`);
           }
@@ -623,7 +623,7 @@ export class Renderbase implements INodeType {
       body.variables = variables;
     }
 
-    const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+    const response = await this.helpers.requestWithAuthentication.call(this, 'rynkoApi', {
       method: 'POST' as IHttpRequestMethods,
       url: `${baseUrl}/api/v1/documents/generate`,
       body,
@@ -636,7 +636,7 @@ export class Renderbase implements INodeType {
   private async getDocument(this: IExecuteFunctions, itemIndex: number, baseUrl: string): Promise<IDataObject> {
     const jobId = this.getNodeParameter('jobId', itemIndex) as string;
 
-    const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+    const response = await this.helpers.requestWithAuthentication.call(this, 'rynkoApi', {
       method: 'GET' as IHttpRequestMethods,
       url: `${baseUrl}/api/v1/documents/${jobId}`,
       json: true,
@@ -657,7 +657,7 @@ export class Renderbase implements INodeType {
       qs.format = this.getNodeParameter('searchFormat', itemIndex) as string;
     }
 
-    const response = await this.helpers.requestWithAuthentication.call(this, 'renderbaseApi', {
+    const response = await this.helpers.requestWithAuthentication.call(this, 'rynkoApi', {
       method: 'GET' as IHttpRequestMethods,
       url: `${baseUrl}/api/v1/documents`,
       qs,
