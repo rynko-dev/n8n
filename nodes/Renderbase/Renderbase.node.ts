@@ -92,10 +92,10 @@ export class Rynko implements INodeType {
       },
 
       // ===================
-      // Team Field (for all document generation)
+      // Project Field (for all document generation)
       // ===================
       {
-        displayName: 'Team',
+        displayName: 'Project',
         name: 'teamId',
         type: 'options',
         typeOptions: {
@@ -109,14 +109,14 @@ export class Rynko implements INodeType {
           },
         },
         default: '',
-        description: 'Select a team from your Rynko account',
+        description: 'Select a project from your Rynko account',
       },
 
       // ===================
-      // Workspace Field (for all document generation)
+      // Environment Field (for all document generation)
       // ===================
       {
-        displayName: 'Workspace',
+        displayName: 'Environment',
         name: 'workspaceId',
         type: 'options',
         typeOptions: {
@@ -131,7 +131,7 @@ export class Rynko implements INodeType {
           },
         },
         default: '',
-        description: 'Select a workspace within the selected team',
+        description: 'Select an environment within the selected project',
       },
 
       // ===================

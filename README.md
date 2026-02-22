@@ -138,9 +138,9 @@ Your API key provides access to:
 - `POST /api/v1/webhook-subscriptions` - Subscribe to webhooks
 - `DELETE /api/v1/webhook-subscriptions/:id` - Unsubscribe
 
-## Workspace Support
+## Environment Support
 
-When generating documents, you can optionally specify a `workspaceId` to generate documents in a specific workspace. If not provided, documents are generated in the user's current workspace.
+When generating documents, you can optionally specify a `workspaceId` to generate documents in a specific environment. If not provided, documents are generated in the user's current environment.
 
 ## Documentation
 

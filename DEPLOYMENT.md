@@ -28,30 +28,30 @@ This guide covers deploying the Rynko n8n community node package.
 
 The Rynko backend must have:
 - API Key authentication enabled
-- **Integration API module deployed** (`/api/v1/integration-api/*` endpoints) - Required for team/workspace/template cascading selection
+- **Integration API module deployed** (`/api/v1/integration-api/*` endpoints) - Required for project/environment/template cascading selection
 - Webhook subscriptions module deployed
 - SSL certificate (HTTPS required)
 
 ---
 
-## Cascading Team/Workspace/Template Selection
+## Cascading Project/Environment/Template Selection
 
-The Rynko n8n node implements cascading dropdown selection for Team → Workspace → Template. This ensures users can only select templates from workspaces they have access to.
+The Rynko n8n node implements cascading dropdown selection for Project → Environment → Template. This ensures users can only select templates from environments they have access to.
 
 ### How It Works
 
-1. **Team Dropdown**: Lists all teams the user has access to via the Integration API
-2. **Workspace Dropdown**: Filters workspaces based on the selected team
-3. **Template Dropdown**: Filters templates based on the selected workspace and document type
+1. **Project Dropdown**: Lists all projects the user has access to via the Integration API
+2. **Environment Dropdown**: Filters environments based on the selected project
+3. **Template Dropdown**: Filters templates based on the selected environment and document type
 
 ### Implementation Details
 
 The node uses n8n's `loadOptions` methods with `loadOptionsDependsOn` to create the cascading behavior:
 
 ```typescript
-// Team dropdown - no dependencies
+// Project dropdown - no dependencies
 {
-  displayName: 'Team',
+  displayName: 'Project',
   name: 'teamId',
   type: 'options',
   typeOptions: {
@@ -59,9 +59,9 @@ The node uses n8n's `loadOptions` methods with `loadOptionsDependsOn` to create 
   },
 }
 
-// Workspace dropdown - depends on teamId
+// Environment dropdown - depends on teamId
 {
-  displayName: 'Workspace',
+  displayName: 'Environment',
   name: 'workspaceId',
   type: 'options',
   typeOptions: {
@@ -86,9 +86,9 @@ The node uses n8n's `loadOptions` methods with `loadOptionsDependsOn` to create 
 
 | Endpoint | Purpose |
 |----------|---------|
-| `GET /api/v1/integration-api/teams` | List teams for dropdown |
-| `GET /api/v1/integration-api/workspaces?teamId={id}` | List workspaces filtered by team |
-| `GET /api/v1/integration-api/templates?workspaceId={id}&type={pdf\|excel}` | List templates filtered by workspace and type |
+| `GET /api/v1/integration-api/teams` | List projects for dropdown |
+| `GET /api/v1/integration-api/workspaces?teamId={id}` | List environments filtered by project |
+| `GET /api/v1/integration-api/templates?workspaceId={id}&type={pdf\|excel}` | List templates filtered by environment and type |
 
 ---
 
@@ -331,14 +331,14 @@ npm view n8n-nodes-rynko
 - Ensure API key has correct permissions
 - Check n8n logs for API errors during dropdown load
 
-**Workspace Dropdown Empty After Team Selection**
+**Environment Dropdown Empty After Project Selection**
 - Verify the `loadOptionsDependsOn: ['teamId']` is configured
-- Check that the team has workspaces created
-- Verify API key has access to the selected team's workspaces
+- Check that the project has environments created
+- Verify API key has access to the selected project's environments
 
 **Template Dropdown Shows Wrong Templates**
-- Verify workspace filtering is working correctly
-- Check that templates exist in the selected workspace
+- Verify environment filtering is working correctly
+- Check that templates exist in the selected environment
 - For PDF/Excel specific dropdowns, verify the type filter is applied
 
 ### Debug Mode
@@ -385,11 +385,11 @@ The `Rynko.node.ts` implements these loadOptions methods for cascading selection
 
 | Method | Purpose | Dependencies |
 |--------|---------|--------------|
-| `getTeams` | List teams for dropdown | None |
-| `getWorkspaces` | List workspaces filtered by team | `teamId` |
-| `getTemplates` | List all templates in workspace | `workspaceId` |
-| `getPdfTemplates` | List PDF templates in workspace | `workspaceId` |
-| `getExcelTemplates` | List Excel templates in workspace | `workspaceId` |
+| `getTeams` | List projects for dropdown | None |
+| `getWorkspaces` | List environments filtered by project | `teamId` |
+| `getTemplates` | List all templates in environment | `workspaceId` |
+| `getPdfTemplates` | List PDF templates in environment | `workspaceId` |
+| `getExcelTemplates` | List Excel templates in environment | `workspaceId` |
 
 ### npm Commands
 
